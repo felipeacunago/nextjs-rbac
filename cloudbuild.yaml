@@ -4,9 +4,6 @@ steps:
     args: ["install"]
   - name: node:20.11.1
     entrypoint: npm
-    args: ["run", "create-env"]
-  - name: node:20.11.1
-    entrypoint: npm
     args: ["run", "build"]
   - name: "gcr.io/cloud-builders/gcloud"
     args: ["app", "deploy"]
