@@ -1,6 +1,6 @@
 runtime: nodejs20
 
-service: nextjs-rbac
+service: default
 
 handlers:
   - url: /.*
