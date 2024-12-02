@@ -1,5 +1,6 @@
 import './globals.css'
 import { AuthProvider } from '@/context/AuthContext'
+import { Suspense } from 'react'
 
 export const metadata = {
   title: 'Next.js RBAC Example',
@@ -15,7 +16,9 @@ export default function RootLayout({
     <html lang="en">
       <body>
         <AuthProvider>
-          {children}
+          <Suspense fallback={<div>Loading...</div>}>
+            {children}
+          </Suspense>
         </AuthProvider>
       </body>
     </html>

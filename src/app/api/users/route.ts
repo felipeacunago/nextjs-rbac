@@ -45,6 +45,7 @@ const users = [
 ]
 
 // Filter sensitive data based on user role
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function filterUserData(user: any, requestingUserRole: UserRole) {
   if (requestingUserRole === 'admin') {
     // Admins see all data

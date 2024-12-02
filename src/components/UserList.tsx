@@ -1,10 +1,23 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 'use client'
 
 import { useAuth } from '@/context/AuthContext'
 import { useEffect, useState } from 'react'
 
 interface UserData {
-  users: any[]
+  users: {
+    id: string
+    name: string
+    email: string
+    role: string
+    department?: string
+    salary?: number
+    personalInfo?: {
+      address: string
+      phoneNumber: string
+      socialSecurity: string
+    }
+  }[]
   metadata: {
     requestedBy: string
     timestamp: string
