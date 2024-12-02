@@ -1,0 +1,8 @@
+runtime: nodejs20
+
+service: nextjs-rbac
+
+handlers:
+  - url: /.*
+    secure: always
+    script: auto
