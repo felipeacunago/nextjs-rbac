@@ -2,7 +2,6 @@ import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 import { UserRole } from './types/auth'
 
-// Define route permissions
 const routePermissions: Record<string, UserRole[]> = {
   '/admin': ['admin'],
   '/dashboard': ['admin', 'user'],
@@ -10,17 +9,36 @@ const routePermissions: Record<string, UserRole[]> = {
   '/api/user': ['admin', 'user'],
 }
 
-// Mock function to get user role from token
-// In a real app, this would verify a JWT token or session
-function getUserRoleFromToken(request: NextRequest): UserRole {
-  const token = request.cookies.get('auth-token')
-  // For demo purposes, we'll use a mock role
-  // In production, decode and verify the token
-  return token?.value === 'admin-token' ? 'admin' : 
-         token?.value === 'user-token' ? 'user' : 'guest'
+async function getUserRole(request: NextRequest): Promise<UserRole> {
+  try {
+    const protocol = request.nextUrl.protocol
+    const host = request.headers.get('host')
+    const baseUrl = `${protocol}//${host}`
+    
+    const response = await fetch(`${baseUrl}/api/auth/verify`, {
+      headers: {
+        cookie: request.headers.get('cookie') || '' 
+      }
+    })
+
+    if (!response.ok) {
+      throw new Error('Failed to verify token')
+    }
+
+    const data = await response.json()
+    return data.role as UserRole
+  } catch (error) {
+    console.error('Error verifying token:', error)
+    return 'guest'
+  }
 }
 
-export function middleware(request: NextRequest) {
+export async function middleware(request: NextRequest) {
+  // Skip middleware for the verify endpoint to avoid infinite loop
+  if (request.nextUrl.pathname === '/api/auth/verify') {
+    return NextResponse.next()
+  }
+
   const path = request.nextUrl.pathname
   
   // Check if the path requires authorization
@@ -33,7 +51,7 @@ export function middleware(request: NextRequest) {
     return NextResponse.next()
   }
 
-  const userRole = getUserRoleFromToken(request)
+  const userRole = await getUserRole(request)
 
   // Check if user has required role
   if (!requiredRoles.includes(userRole)) {
@@ -69,6 +87,7 @@ export const config = {
   matcher: [
     '/admin/:path*',
     '/dashboard/:path*',
-    '/api/:path*'
+    '/api/:path*',
+    '/((?!api/auth/verify).*)'  // Match all paths except /api/auth/verify
   ]
 }

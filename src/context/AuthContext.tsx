@@ -10,8 +10,6 @@ interface AuthContextType extends AuthState {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
-// Mock function to validate token and get user info
-// In a real app, this would make an API call to validate the token
 const validateToken = async (token: string): Promise<User | null> => {
   // Mock user data based on token
   if (token === 'admin-token') {
