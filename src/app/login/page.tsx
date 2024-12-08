@@ -17,8 +17,8 @@ export default function LoginPage() {
   }, [isAuthenticated, router, from])
 
   const handleLogin = async (role: 'admin' | 'user') => {
-    const token = role === 'admin' ? 'admin-token' : 'user-token'
-    await login(token)
+    await login(role)
+    router.push("/dashboard")
   }
 
   return (
