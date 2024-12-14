@@ -1,5 +1,8 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextResponse } from 'next/server'
 import { UserRole } from '@/types/auth'
+import { cookies } from 'next/headers';
+import { getIronSession } from 'iron-session';
+import { sessionOptions, SessionData } from '@/lib/session';
 
 // Mock user database
 const users = [
@@ -62,9 +65,14 @@ function filterUserData(user: any, requestingUserRole: UserRole) {
   }
 }
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   // Get user role from header (set by middleware)
-  const userRole = request.headers.get('x-user-role') as UserRole
+  // const userRole = request.headers.get('x-user-role') as UserRole
+  const cookieStore = await cookies();
+  const session = await getIronSession<SessionData>(cookieStore, sessionOptions);
+
+  const userRole: UserRole | null = session.user?.role as UserRole | null;
+  console.log(session.user)
 
   if (!userRole) {
     return NextResponse.json(

@@ -7,17 +7,17 @@ import { useRouter } from 'next/navigation'
 import { useEffect } from 'react'
 
 export default function DashboardPage() {
-  const { user, isAuthenticated } = useAuth()
+  const { user, isAuthenticated, isLoading } = useAuth()
   const router = useRouter()
 
-  useEffect(() => {
-    if (!isAuthenticated) {
-      router.push('/login?from=/dashboard')
-    }
-  }, [isAuthenticated, router])
+  // useEffect(() => {
+  //   if (!isAuthenticated && !isLoading) {
+  //     router.push('/login?from=/dashboard')
+  //   }
+  // }, [isAuthenticated, isLoading, router])
 
-  if (!user) {
-    return null
+  if (isLoading || !user) {
+    return <>Loading</>
   }
 
   return (

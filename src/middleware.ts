@@ -1,6 +1,10 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
-import { UserRole } from './types/auth'
+import { User, UserRole } from './types/auth'
+import { cookies } from 'next/headers';
+import { getIronSession } from 'iron-session';
+import { sessionOptions, SessionData } from '@/lib/session';
+import { UserProtectedData } from '@/lib/session';
 
 const routePermissions: Record<string, UserRole[]> = {
   '/admin': ['admin'],
@@ -9,33 +13,29 @@ const routePermissions: Record<string, UserRole[]> = {
   '/api/user': ['admin', 'user'],
 }
 
-async function getUserRole(request: NextRequest): Promise<UserRole> {
-  try {
-    const protocol = request.nextUrl.protocol
-    const host = request.headers.get('host')
-    const baseUrl = `${protocol}//${host}`
-    
-    const response = await fetch(`${baseUrl}/api/auth/verify`, {
-      headers: {
-        cookie: request.headers.get('cookie') || '' 
-      }
-    })
+async function getUser(): Promise<UserProtectedData> {
+  const cookieStore = await cookies();
+  const session = await getIronSession<SessionData>(cookieStore, sessionOptions);
 
-    if (!response.ok) {
-      throw new Error('Failed to verify token')
-    }
-
-    const data = await response.json()
-    return data.role as UserRole
-  } catch (error) {
-    console.error('Error verifying token:', error)
-    return 'guest'
+  if (!session.user) {
+    throw new Error('User role is undefined')
   }
+  const user = session.user as UserProtectedData;
+  if (!user.role) {
+    throw new Error('User role is undefined')
+  }
+  return user;
 }
 
 export async function middleware(request: NextRequest) {
-  // Skip middleware for the verify endpoint to avoid infinite loop
-  if (request.nextUrl.pathname === '/api/auth/verify') {
+  if (request.nextUrl.pathname === '/api/auth/get-user') {
+    return NextResponse.json(await getUser())
+  }
+  if (request.nextUrl.pathname.includes('/api/auth/')) {
+    return NextResponse.next()
+  }
+
+  if (request.nextUrl.pathname === '/api/users') {
     return NextResponse.next()
   }
 
@@ -51,7 +51,8 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next()
   }
 
-  const userRole = await getUserRole(request)
+  const user = await getUser();
+  const userRole = user.role as UserRole;
 
   // Check if user has required role
   if (!requiredRoles.includes(userRole)) {
